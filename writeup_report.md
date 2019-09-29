@@ -6,7 +6,7 @@
 The goals / steps of this project are the following:
 * Implement a 2 dimensional particle filter in C++., while using given map and some initial localization information (analogous to what a GPS would provide), along with observation and control data at each time step.
 * Initialize particle filter based on noisy position data sensed from the simulator.
-* Predict the vehicle's next state from previous (noiseless control) data.
+* Predict the vehicle's next state from previous (noiseless control) data, and add random Gaussian noise to it.
 * Update the weights of particle filters according to noisy observation data received from the simulator.
 * Resample particle filters with substitution based on their individual weights.
 * Calculate and output the average weighted error of the particle filter over all time steps so far.

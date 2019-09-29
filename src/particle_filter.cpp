@@ -3,6 +3,9 @@
  *
  * Created on: Dec 12, 2016
  * Author: Tiffany Huang
+ *
+ * Updated on: Sep 29, 2019
+ * Author: Abhishek Roy
  */
 
 #include "particle_filter.h"
@@ -25,14 +28,14 @@ using std::vector;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
   /**
-   * TODO: Set the number of particles. Initialize all particles to 
+   * Set the number of particles. Initialize all particles to 
    *   first position (based on estimates of x, y, theta and their uncertainties
    *   from GPS) and all weights to 1. 
-   * TODO: Add random Gaussian noise to each particle.
+   * Add random Gaussian noise to each particle.
    * NOTE: Consult particle_filter.h for more information about this method 
    *   (and others in this file).
    */
-  num_particles = 100;  // TODO: Set the number of particles
+  num_particles = 100;  // Set the number of particles
 
   std::default_random_engine gen;
 
@@ -59,7 +62,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 void ParticleFilter::prediction(double delta_t, double std_pos[], 
                                 double velocity, double yaw_rate) {
   /**
-   * TODO: Add measurements to each particle and add random Gaussian noise.
+   * Add measurements to each particle and add random Gaussian noise.
    * NOTE: When adding noise you may find std::normal_distribution 
    *   and std::default_random_engine useful.
    *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
@@ -74,7 +77,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
     double new_y;
     double new_theta;
 
-    // if (yaw_rate == 0)
+    // Predict the vehicle's next state from previous (noiseless control) data. 
     if (fabs(yaw_rate) < EPS)
     {
       new_x = particles[i].x + velocity * delta_t * cos(particles[i].theta);
@@ -88,6 +91,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
       new_theta = particles[i].theta + (yaw_rate * delta_t);
     }
 
+    // Add random Gaussian noise to the vehicle's next state
     std::normal_distribution<double> N_x(new_x, std_pos[0]);
     std::normal_distribution<double> N_y(new_y, std_pos[1]);
     std::normal_distribution<double> N_theta(new_theta, std_pos[2]);
@@ -101,7 +105,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
 void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted, 
                                      vector<LandmarkObs>& observations) {
   /**
-   * TODO: Find the predicted measurement that is closest to each 
+   * Find the predicted measurement that is closest to each 
    *   observed measurement and assign the observed measurement to this 
    *   particular landmark.
    * NOTE: this method will NOT be called by the grading code. But you will 
@@ -145,7 +149,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                    const vector<LandmarkObs> &observations, 
                                    const Map &map_landmarks) {
   /**
-   * TODO: Update the weights of each particle using a mult-variate Gaussian 
+   * Update the weights of each particle using a mult-variate Gaussian 
    *   distribution. You can read more about this distribution here: 
    *   https://en.wikipedia.org/wiki/Multivariate_normal_distribution
    * NOTE: The observations are given in the VEHICLE'S coordinate system. 
@@ -166,7 +170,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     double particle_y = particles[i].y;
     double particle_theta = particles[i].theta;
 
-    // placeholder to keep map landmark locations those are predicted to be within sensor range of the particle
+    // placeholder to keep only those selected map landmark locations, which will be predicted to be within sensor range of the particle
     vector<LandmarkObs> predictions;
 
     // For each landmark
@@ -211,14 +215,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
     for (unsigned int j = 0; j < transformed_observations.size(); j++) {
       
-      // placeholders for observation (measurement) and associated prediction (mean) coordinates
+      // placeholders for observation (measurement)
       double meas_x = transformed_observations[j].x;
       double meas_y = transformed_observations[j].y;
 
+      // placeholder for associated map landmark id
       int association = transformed_observations[j].id;
 
-      // get the x,y coordinates of the prediction (mean) associated with the current observation
+      // placeholders for associated prediction (mean) coordinates
       double mu_x, mu_y;
+
+      // get the x & y coordinates of the prediction (mean) associated with the current observation
       for (unsigned int k = 0; k < predictions.size(); k++) {
         if (predictions[k].id == association) {
           mu_x = predictions[k].x;
@@ -226,8 +233,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         }
       }
 
-      // Saving values for debugging (optional)
+      // Tracking predicted association (id) values for observed map landmarks
       associations.push_back(association);
+
+      // Saving values for debugging (optional)
       sense_x.push_back(mu_x);      
       sense_y.push_back(mu_y);
 
@@ -245,13 +254,15 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
       weights[i] = particles[i].weight;
     }
+
+    // Assigning association details for observed map landmarks, to be sent to the simulator
     SetAssociations(particles[i], associations, sense_x, sense_y);
   }
 }
 
 void ParticleFilter::resample() {
   /**
-   * TODO: Resample particles with replacement with probability proportional 
+   * Resample particles with replacement with probability proportional 
    *   to their weight. 
    * NOTE: You may find std::discrete_distribution helpful here.
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
