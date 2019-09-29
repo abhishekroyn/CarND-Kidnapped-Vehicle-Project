@@ -197,10 +197,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       transformed_observation.y = particle_y + (observation.x * sin(particle_theta) + observation.y * cos(particle_theta));
       transformed_observation.id = observation.id;
       transformed_observations.push_back(transformed_observation);
-
-//      double t_x = cos(p_theta)*observations[j].x - sin(p_theta)*observations[j].y + p_x;
-//      double t_y = sin(p_theta)*observations[j].x + cos(p_theta)*observations[j].y + p_y;
-//      transformed_observations.push_back(LandmarkObs{ observations[j].id, t_x, t_y });
     }
 
     // perform dataAssociation for the predictions and transformed observations on current particle
@@ -208,6 +204,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
     // reinitialize weight
     particles[i].weight = 1.0;
+
+    vector<int> associations;
+    vector<double> sense_x;
+    vector<double> sense_y;
 
     for (unsigned int j = 0; j < transformed_observations.size(); j++) {
       
@@ -226,6 +226,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         }
       }
 
+      // Saving values for debugging (optional)
+      associations.push_back(association);
+      sense_x.push_back(mu_x);      
+      sense_y.push_back(mu_y);
+
       // calculate weight for this observation with multivariate Gaussian
       double sigma_x = std_landmark[0];
       double sigma_y = std_landmark[1];
@@ -239,15 +244,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       }
 
       weights[i] = particles[i].weight;
-
-//      vector<int> associations;
-//      vector<double> sense_x;
-//      vector<double> sense_y;
-
-//      associations.push_back(association + 1);
-//      sense_x.push_back(trans_observations[i].x);
-//      sense_y.push_back(trans_observations[i].y);
     }
+    SetAssociations(particles[i], associations, sense_x, sense_y);
   }
 }
 
